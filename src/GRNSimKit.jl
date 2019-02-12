@@ -4,7 +4,8 @@ module GRNSimKit
 include("Include.jl")
 
 # exports -
-export GRNSolve
+export GRNSteadyStateSolve
+export GRNDynamicSolve
 export build_default_data_dictionary
 
 end # module

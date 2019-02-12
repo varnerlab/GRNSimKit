@@ -1,4 +1,17 @@
-function GRNSolve(time_span::Tuple{Float64,Float64}, data_dictionary::Dict{Symbol,Any})
+function GRNSteadyStateSolve(data_dictionary::Dict{Symbol,Any})
+
+    # grab the initial_condition_array from the data_dictionary -
+    initial_condition_array = data_dictionary[:initial_condition_array]
+
+    # calculate the steady-state soln -
+    steady_state_prob = SteadyStateProblem(balances, initial_condition_array, data_dictionary)
+    steady_state_soln  = solve(steady_state_prob, SSRootfind())
+
+    # return -
+    return steady_state_soln.u
+end
+
+function GRNDynamicSolve(time_span::Tuple{Float64,Float64}, data_dictionary::Dict{Symbol,Any})
 
     # Check -
     # TODO: do we have a legit time_span and data_dictionary?
@@ -10,10 +23,10 @@ function GRNSolve(time_span::Tuple{Float64,Float64}, data_dictionary::Dict{Symbo
     initial_condition_array = data_dictionary[:initial_condition_array]
 
     # build problem object -
-    problem_object = ODEProblem(balances,initial_condition_array,time_span, data_dictionary)
+    problem_object = ODEProblem(balances, initial_condition_array, time_span, data_dictionary)
 
     # solve -
-    solution = sol = solve(problem_object)
+    solution = solve(problem_object)
 
     # pull solution apart -
     T = solution.t
@@ -34,5 +47,4 @@ function GRNSolve(time_span::Tuple{Float64,Float64}, data_dictionary::Dict{Symbo
     # return -
     return (T,X)
     # -------------------------------------------------------------------------- #
-
 end
