@@ -11,4 +11,4 @@ Start of the [Julia REPL](https://docs.julialang.org/en/v1/stdlib/REPL/index.htm
 This will install GRNSimKit and other all required packages.
 
 ### How we solve a GRN system of equations?
-GRNSimKit supports multiple solution modes for a system of GRN equations. 
+GRNSimKit supports multiple solution modes for a system of GRN equations. [Checkout the solution routines](/solve/index.md)
