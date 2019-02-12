@@ -10,8 +10,8 @@ vector (in your concentration units) [Array{Float64,1}](https://docs.julialang.o
 
 Argument | Type | Description
 ---: | --- | :---
-data_dictionary | Dict{Symbol,Any} | Dictionary holding system parameters. Generated using the ``build_default_data_dictionary`` method.
-X | Array{Float64,1} | Steady state solution array ``\mathcal{M}\times{1}`` vector.
+data_dictionary | Dict{Symbol,Any} | Dictionary holding system parameters. Generated using the ``build_default_data_dictionary`` method
+X | Array{Float64,1} | Steady state solution array (``S x 1`` vector)
 
 
 * [GRNDynamicSolve](https://github.com/varnerlab/GRNSimKit/blob/master/src/Solve.jl):
