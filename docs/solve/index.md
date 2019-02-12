@@ -14,6 +14,9 @@ data_dictionary | Dict{Symbol,Any} | Dictionary holding system parameters. Gener
 X | Array{Float64,1} | Steady state solution array (``S x 1`` vector)
 
 
+
+
+
 * [GRNDynamicSolve](https://github.com/varnerlab/GRNSimKit/blob/master/src/Solve.jl):
 Solves the system of ordinary differential equations using the routines in the [DifferentialEquations](https://github.com/JuliaDiffEq/DifferentialEquations.jl) package:
 
