@@ -17,7 +17,7 @@ Solves the system of ordinary differential equations using the routines in the [
 
 Argument | Type | Description
 --- | --- | ---
-time_span | Tuple{Float64, Float64} | Time span for the simulation e.g., (0.0, 1.0)
+time_span | ```jl Tuple{Float64, Float64} ``` | Time span for the simulation e.g., (0.0, 1.0)
 data_dictionary | Dict{Symbol,Any} | Dictionary holding system parameters. Generated using the ``build_default_data_dictionary`` method.
 T | Array{Float64,1} | Array of time values for the simulation (chosen by the solver, unless otherwise specified)
 X | Array{Float64,2} | Solution array, time values (rows), concentration values are the columns
