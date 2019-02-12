@@ -8,6 +8,12 @@ vector (in your concentration units) [Array{Float64,1}](https://docs.julialang.o
     function GRNSteadyStateSolve(data_dictionary::Dict{Symbol,Any}) -> Array{Float64,1}
 ```
 
+Argument | Type | Description
+---: | --- | :---
+data_dictionary | Dict{Symbol,Any} | Dictionary holding system parameters. Generated using the ``build_default_data_dictionary`` method.
+X | Array{Float64,1} | Steady state solution array ``\mathcal{M}\times{1}`` vector.
+
+
 * [GRNDynamicSolve](https://github.com/varnerlab/GRNSimKit/blob/master/src/Solve.jl):
 Solves the system of ordinary differential equations using the routines in the [DifferentialEquations](https://github.com/JuliaDiffEq/DifferentialEquations.jl) package:
 
@@ -20,4 +26,4 @@ Argument | Type | Description
 time_span | Tuple{Float64, Float64} | Time span for the simulation e.g., (0.0, 1.0)
 data_dictionary | Dict{Symbol,Any} | Dictionary holding system parameters. Generated using the ``build_default_data_dictionary`` method.
 T | Array{Float64,1} | Array of time values for the simulation (chosen by the solver, unless otherwise specified)
-X | Array{Float64,2} | Solution array, time values (rows), concentration values are the columns
+X | Array{Float64,2} | Solution array; each row is a time value, each column is a species
