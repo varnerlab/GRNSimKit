@@ -1,7 +1,5 @@
 using GRNSimKit
-using Base.Test
-
-
+using Test
 
 # Data tests -
 @testset "DefaultDataDictionary" begin
