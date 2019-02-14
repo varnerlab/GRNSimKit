@@ -47,7 +47,7 @@ function GRNDiscreteDynamicSolve(time_span::Tuple{Float64, Float64, Float64}, da
         current_time_value = simulation_time_array[time_value_index]
 
         # calculate the next state -
-        next_state_array = discrete_dynamic_balances(current_time_value, current_state, data_dictionary)
+        next_state_array = discrete_dynamic_balances(current_time_value, current_state_array, data_dictionary)
 
         # package -
         for index = 1:number_of_states
