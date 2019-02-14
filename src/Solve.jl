@@ -8,13 +8,13 @@ function calculate_discrete_steady_state(ic_array, data_dictionary)
     upper_bound_array = data_dictionary[:upper_bound_array]
 
     # make a call to the optim package -
-    result = optimize(objective_function,lower_bound_array, upper_bound_array, ic_array,Fminbox(LBFGS()))
+    # result = optimize(objective_function,lower_bound_array, upper_bound_array, ic_array,Fminbox(LBFGS()))
 
     # get the extent -
-    steady_state_vector = Optim.minimizer(result)
+    # steady_state_vector = Optim.minimizer(result)
 
     # return -
-    return steady_state_vector
+    return zeros(100)
 
 end
 

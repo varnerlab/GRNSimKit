@@ -2,7 +2,7 @@
 using DifferentialEquations
 using LinearAlgebra
 using JSON
-using Optim
+# using Optim
 
 # My local files -
 include("Constants.jl")
