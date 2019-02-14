@@ -124,6 +124,28 @@ function calculate_txtl_kinetics_array(t,x,data_dictionary)
     return txtl_kinetics_array
 end
 
+function discrete_dynamic_balances(t,x,data_dictionary)
+
+    # get the structure arrays from the data_dictionary -
+    AHAT = data_dictionary[:dilution_matrix]
+    SHAT = data_dictionary[:stoichiometric_matrix]
+
+    # calculate the kinetics array -
+    kinetics_array = calculate_txtl_kinetics_array(t,x,data_dictionary)
+
+    # calculate the control array -
+    control_array = calculate_control_array(t,x,data_dictionary)
+
+    # modfiy the kinetics -
+    rV = kinetics_array.*control_array
+
+    # compute the next time step -
+    next_step = AHAT*x + SHAT*rV
+
+    # return -
+    return next_step
+end
+
 function balances(dx,x,data_dictionary,t)
 
     # get the structure arrays from the data_dictionary -

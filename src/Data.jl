@@ -139,6 +139,88 @@ function build_biophysical_dictionary(model_dictionary::Dict{String,Any})
     return biophysical_dictionary
 end
 
+function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
+
+    # get node and species lists -
+    list_of_species_dictionaries = model_dictionary["list_of_species_symbols"]
+
+    # how many species do we have?
+    total_number_of_species = length(list_of_species_dictionaries)
+
+    # build a blank st array -
+    dilution_matrix = -1*Matrix{Float64}(I, total_number_of_species, total_number_of_species)
+
+    # correct -
+    for species_dictionary in list_of_species_dictionaries
+
+        # get the index, and the type -
+        species_index = parse(Int64, species_dictionary["index"])
+        species_type_symbol = Symbol(species_dictionary["type"])
+
+        # if symbol is of type constant, then the dilution element is 0
+        if species_type_symbol == :constant
+            dilution_matrix[species_index,species_index] = 1.0
+        end
+    end
+
+    # get the cell doubling time -
+    tmp_value = model_dictionary["biophysical_constants"]["cell_doubling_time"]["value"]
+    cell_doubling_time = parse(Float64, tmp_value)
+
+    # compute the mumax -
+    mu = log(2)/cell_doubling_time
+
+    # compute the rate array -
+    dilution_term_array = Float64[]
+
+    # ok, next let's compute the degrdation for each mRNA and protein node -
+    list_of_gene_nodes = model_dictionary["list_of_nodes"]
+    for node_dictionary in list_of_gene_nodes
+
+        # grab the parameters for this node -
+        mRNA_half_life_in_hr = parse(Float64, node_dictionary["parameters"]["mRNA_half_life_in_hr"])
+
+        # compute the degradation rate constant -
+        kDX = -(1/mRNA_half_life_in_hr)*log(0.5)
+
+        # dilution term -
+        term = (mu+kDX)
+
+        # push -
+        push!(dilution_term_array, term)
+    end
+
+    for node_dictionary in list_of_gene_nodes
+
+        # grab the parameters for this node -
+        protein_half_life_in_hr = parse(Float64, node_dictionary["parameters"]["protein_half_life_in_hr"])
+
+        # compute the degradation rate constant -
+        kDL = -(1/protein_half_life_in_hr)*log(0.5)
+
+        # dilution term -
+        term = (mu+kDL)
+
+        # push -
+        push!(dilution_term_array, term)
+    end
+
+    # add zeros for constant terms -
+    for species_dictionary in list_of_species_dictionaries
+
+        # get the type -
+        species_type_symbol = Symbol(species_dictionary["type"])
+
+        # if symbol is of type constant, then the dilution element is 0
+        if species_type_symbol == :constant
+            push!(dilution_term_array, 1.0)
+        end
+    end
+
+    # return the dilution array -
+    return dilution_matrix.*dilution_term_array
+end
+
 function build_dilution_matrix(model_dictionary::Dict{String,Any})
 
     # get node and species lists -
@@ -269,6 +351,63 @@ function compute_symbol_index_map(model_dictionary)
     return species_index_map
 end
 
+function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_model_file::String)
+
+    # TODO: Do we have a legit path to the model file?
+    # ....
+
+    # initailzie -
+    data_dictionary = Dict{Symbol,Any}()
+
+    # Load the model dictionary -
+    model_dictionary = JSON.parsefile(path_to_model_file)
+
+    # build the build_biophysical_dictionary -
+    biophysical_dictionary = build_biophysical_dictionary(model_dictionary)
+
+    # build the dilution matrix -
+    AM = build_discrete_dilution_matrix(model_dictionary)
+
+    # Build the stoichiometric_matrix -
+    SM = build_stoichiometic_matrix(model_dictionary)
+
+    # Compute AHAT and SHAT -
+    (nr,nc) = size(AM)
+    IM = Matrix(1.0I,nr,nc)
+    AHAT = exp(AM*time_step)
+    SHAT = inv(A)*(AHAT - IM)*SM
+
+    # setup the system size -
+    number_of_states = compute_total_number_of_states(model_dictionary)
+
+    # setup initial conditions -
+    initial_condition_array = zeros(number_of_states)
+
+    # compute the transcription rates for all the genes -
+    transcription_kinetics_array = compute_transcription_kinetic_array(biophysical_dictionary, model_dictionary)
+
+    # precompute some translation parameters -
+    translation_parameters_array = compute_translation_parameter_array(biophysical_dictionary, model_dictionary)
+
+    # precompute a mapping between the species symbols, and index in the x-vector
+    species_symbol_index_map = compute_symbol_index_map(model_dictionary)
+
+    # --- populate the DD -------------------------------------- #
+    data_dictionary[:dictionary_type] = :discrete_dynamic
+    data_dictionary[:initial_condition_array] = initial_condition_array
+    data_dictionary[:number_of_states] = number_of_states
+    data_dictionary[:dilution_matrix] = AHAT
+    data_dictionary[:stoichiometric_matrix] = SHAT
+    data_dictionary[:transcription_kinetics_array] = transcription_kinetics_array
+    data_dictionary[:translation_parameters_array] = translation_parameters_array
+    data_dictionary[:species_symbol_index_map] = species_symbol_index_map
+    data_dictionary[:model_dictionary] = model_dictionary
+
+    # return the dd w/default values -
+    return data_dictionary
+    # ---------------------------------------------------------- #
+end
+
 function build_default_data_dictionary(path_to_model_file::String)
 
     # TODO: Do we have a legit path to the model file?
@@ -305,6 +444,7 @@ function build_default_data_dictionary(path_to_model_file::String)
     species_symbol_index_map = compute_symbol_index_map(model_dictionary)
 
     # --- populate the DD -------------------------------------- #
+    data_dictionary[:dictionary_type] = :general_dynamic
     data_dictionary[:initial_condition_array] = initial_condition_array
     data_dictionary[:number_of_states] = number_of_states
     data_dictionary[:dilution_matrix] = AM
