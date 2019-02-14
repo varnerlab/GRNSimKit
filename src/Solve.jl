@@ -3,12 +3,38 @@ function GRNSteadyStateSolve(data_dictionary::Dict{Symbol,Any})
     # grab the initial_condition_array from the data_dictionary -
     initial_condition_array = data_dictionary[:initial_condition_array]
 
-    # calculate the steady-state soln -
-    steady_state_prob = SteadyStateProblem(balances, initial_condition_array, data_dictionary)
-    steady_state_soln  = solve(steady_state_prob, SSRootfind())
+    # depending upon the type of problem, we will use a different steady-state routine.
+    problem_type_flag = data_dictionary[:problem_type_flag]
+    if problem_type_flag == :general_dynamic
 
-    # return -
-    return steady_state_soln.u
+        # calculate the steady-state soln -
+        steady_state_prob = SteadyStateProblem(balances, initial_condition_array, data_dictionary)
+        steady_state_soln  = solve(steady_state_prob, SSRootfind())
+
+        # return -
+        return steady_state_soln.u
+
+    elseif problem_type_flag == :discrete_dynamic
+
+        # setup the optimization problem -
+        objective_function(x) = discrete_steady_state_balance_residual(x,data_dictionary)
+
+        # get the lower, and upper_bounds for the states -
+        lower_bound_array = data_dictionary[:lower_bound_array]
+        upper_bound_array = data_dictionary[:upper_bound_array]
+
+        # make a call to the optim package -
+        result = optimize(objective_function,lower_bound_array, upper_bound_array, initial_condition_array,Fminbox(LBFGS()))
+
+        # get the extent -
+        steady_state_vector = Optim.minimizer(result)
+
+        # return -
+        return steady_state_vector
+    else
+        # Oooops - throw an error, no problem type flag
+        throw(UndefVarError(:problem_type_flag))
+    end
 end
 
 function GRNDiscreteDynamicSolve(time_span::Tuple{Float64, Float64, Float64}, data_dictionary::Dict{Symbol,Any})

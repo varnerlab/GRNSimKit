@@ -377,6 +377,9 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_mode
     AHAT = exp(AM*time_step)
     SHAT = inv(AM)*(AHAT - IM)*SM
 
+    # for steady-state calculations -
+    CHAT = inv((IM - AHAT))
+
     # setup the system size -
     number_of_states = compute_total_number_of_states(model_dictionary)
 
@@ -392,16 +395,25 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_mode
     # precompute a mapping between the species symbols, and index in the x-vector
     species_symbol_index_map = compute_symbol_index_map(model_dictionary)
 
+    # we need bounds for steady state calculations -
+    lower_bound_array = zeros(number_of_states)
+    upper_bound_array = Inf*ones(number_of_states)
+
     # --- populate the DD -------------------------------------- #
-    data_dictionary[:dictionary_type] = :discrete_dynamic
+    data_dictionary[:problem_type_flag] = :discrete_dynamic
     data_dictionary[:initial_condition_array] = initial_condition_array
     data_dictionary[:number_of_states] = number_of_states
     data_dictionary[:dilution_matrix] = AHAT
     data_dictionary[:stoichiometric_matrix] = SHAT
+    data_dictionary[:steady_state_mass_matrix] = CHAT
     data_dictionary[:transcription_kinetics_array] = transcription_kinetics_array
     data_dictionary[:translation_parameters_array] = translation_parameters_array
     data_dictionary[:species_symbol_index_map] = species_symbol_index_map
     data_dictionary[:model_dictionary] = model_dictionary
+
+    # bounds for steady-state calculation -
+    data_dictionary[:lower_bound_array] = lower_bound_array
+    data_dictionary[:upper_bound_array] = upper_bound_array
 
     # return the dd w/default values -
     return data_dictionary
@@ -444,7 +456,7 @@ function build_default_data_dictionary(path_to_model_file::String)
     species_symbol_index_map = compute_symbol_index_map(model_dictionary)
 
     # --- populate the DD -------------------------------------- #
-    data_dictionary[:dictionary_type] = :general_dynamic
+    data_dictionary[:problem_type_flag] = :general_dynamic
     data_dictionary[:initial_condition_array] = initial_condition_array
     data_dictionary[:number_of_states] = number_of_states
     data_dictionary[:dilution_matrix] = AM
