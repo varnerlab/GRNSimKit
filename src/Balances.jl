@@ -137,6 +137,9 @@ function discrete_steady_state_balance_residual(x,data_dictionary)
     # calculate the control array -
     control_array = calculate_control_array(0,x,data_dictionary)
 
+    # modfiy the kinetics -
+    rV = kinetics_array.*control_array
+
     # compute the error -
     residual = (x - CHAT*SHAT*rV)
     error = transpose(residual)*residual
