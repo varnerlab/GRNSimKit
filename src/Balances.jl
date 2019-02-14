@@ -126,10 +126,17 @@ end
 
 function discrete_steady_state_balance_residual(x,data_dictionary)
 
+    # ignore the *constant* species -
+    x_dynamic = x[1:end-1]
+
     # get the structure arrays from the data_dictionary -
     AHAT = data_dictionary[:dilution_matrix]
     SHAT = data_dictionary[:stoichiometric_matrix]
     CHAT = data_dictionary[:steady_state_mass_matrix]
+
+    AHAT_dynamic = AHAT[1:end-1,:]
+    SHAT_dynamic = SHAT[1:end-1,:]
+    CHAT_dynamic = CHAT[1:end-1,:]
 
     # calculate the kinetics array -
     kinetics_array = calculate_txtl_kinetics_array(0,x,data_dictionary)
@@ -141,7 +148,7 @@ function discrete_steady_state_balance_residual(x,data_dictionary)
     rV = kinetics_array.*control_array
 
     # compute the error -
-    residual = (x - CHAT*SHAT*rV)
+    residual = (x_dynamic - CHAT_dynamic*SHAT_dynamic*rV)
     error = transpose(residual)*residual
 
     # return the error
