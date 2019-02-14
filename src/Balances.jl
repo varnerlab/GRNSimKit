@@ -132,10 +132,10 @@ function discrete_steady_state_balance_residual(x,data_dictionary)
     CHAT = data_dictionary[:steady_state_mass_matrix]
 
     # calculate the kinetics array -
-    kinetics_array = calculate_txtl_kinetics_array(t,x,data_dictionary)
+    kinetics_array = calculate_txtl_kinetics_array(0,x,data_dictionary)
 
     # calculate the control array -
-    control_array = calculate_control_array(t,x,data_dictionary)
+    control_array = calculate_control_array(0,x,data_dictionary)
 
     # compute the error -
     residual = (x - CHAT*SHAT*rV)
