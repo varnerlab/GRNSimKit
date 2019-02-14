@@ -1,3 +1,23 @@
+function calculate_discrete_steady_state(ic_array, data_dictionary)
+
+    # setup the optimization problem -
+    objective_function(x) = discrete_steady_state_balance_residual(x,data_dictionary)
+
+    # get the lower, and upper_bounds for the states -
+    lower_bound_array = data_dictionary[:lower_bound_array]
+    upper_bound_array = data_dictionary[:upper_bound_array]
+
+    # make a call to the optim package -
+    result = optimize(objective_function,lower_bound_array, upper_bound_array, ic_array,Fminbox(LBFGS()))
+
+    # get the extent -
+    steady_state_vector = Optim.minimizer(result)
+
+    # return -
+    return steady_state_vector
+
+end
+
 function GRNSteadyStateSolve(data_dictionary::Dict{Symbol,Any})
 
     # grab the initial_condition_array from the data_dictionary -
@@ -15,22 +35,7 @@ function GRNSteadyStateSolve(data_dictionary::Dict{Symbol,Any})
         return steady_state_soln.u
 
     elseif problem_type_flag == :discrete_dynamic
-
-        # setup the optimization problem -
-        objective_function(x) = discrete_steady_state_balance_residual(x,data_dictionary)
-
-        # get the lower, and upper_bounds for the states -
-        lower_bound_array = data_dictionary[:lower_bound_array]
-        upper_bound_array = data_dictionary[:upper_bound_array]
-
-        # make a call to the optim package -
-        result = optimize(objective_function,lower_bound_array, upper_bound_array, initial_condition_array,Fminbox(LBFGS()))
-
-        # get the extent -
-        steady_state_vector = Optim.minimizer(result)
-
-        # return -
-        return steady_state_vector
+        return calculate_discrete_steady_state(initial_condition_array, data_dictionary)
     else
         # Oooops - throw an error, no problem type flag
         throw(UndefVarError(:problem_type_flag))
