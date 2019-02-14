@@ -375,7 +375,7 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_mode
     (nr,nc) = size(AM)
     IM = Matrix(1.0I,nr,nc)
     AHAT = exp(AM*time_step)
-    SHAT = inv(A)*(AHAT - IM)*SM
+    SHAT = inv(AM)*(AHAT - IM)*SM
 
     # setup the system size -
     number_of_states = compute_total_number_of_states(model_dictionary)
