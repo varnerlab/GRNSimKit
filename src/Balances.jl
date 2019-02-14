@@ -124,7 +124,7 @@ function calculate_txtl_kinetics_array(t,x,data_dictionary)
     return txtl_kinetics_array
 end
 
-function discrete_steady_state_balances(x,data_dictionary)
+function discrete_steady_state_balance_residual(x,data_dictionary)
 
     # get the structure arrays from the data_dictionary -
     AHAT = data_dictionary[:dilution_matrix]
