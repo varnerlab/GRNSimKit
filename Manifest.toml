@@ -269,9 +269,9 @@ version = "1.4.0"
 
 [[NLSolversBase]]
 deps = ["Calculus", "DiffEqDiffTools", "DiffResults", "Distributed", "ForwardDiff", "LinearAlgebra", "Random", "SparseArrays", "Test"]
-git-tree-sha1 = "2bd568eda045f5ad2cbd311d71e09d7165ab2bf6"
+git-tree-sha1 = "0c6f0e7f2178f78239cfb75310359eed10f2cacb"
 uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
-version = "7.3.0"
+version = "7.3.1"
 
 [[NLsolve]]
 deps = ["DiffBase", "DiffEqDiffTools", "Distances", "ForwardDiff", "LineSearches", "LinearAlgebra", "NLSolversBase", "Printf", "Reexport", "SparseArrays", "Test"]
