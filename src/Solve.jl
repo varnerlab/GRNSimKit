@@ -8,6 +8,8 @@ function calculate_discrete_steady_state(ic_array, data_dictionary)
     # main loop -
     is_ok_to_stop = false
     steady_state_vector = zeros(1)
+    max_number_of_iterations = 100
+    counter = 1
     while (is_ok_to_stop == false)
 
         # run the model for a bit -
@@ -24,13 +26,15 @@ function calculate_discrete_steady_state(ic_array, data_dictionary)
         error = transpose(residual)*residual
 
         # check error -
-        if error < 0.001
+        if error < 0.001 || (counter > max_number_of_iterations)
             is_ok_to_stop = true
             steady_state_vector = soln_array_2[end,:]
         else
             time_start = T2[end]
             time_stop = T2[end] + 100.0
         end
+
+        counter = counter + 1
     end
 
     return steady_state_vector
