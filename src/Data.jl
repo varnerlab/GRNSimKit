@@ -411,9 +411,8 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_mode
     data_dictionary[:species_symbol_index_map] = species_symbol_index_map
     data_dictionary[:model_dictionary] = model_dictionary
 
-    # bounds for steady-state calculation -
-    data_dictionary[:lower_bound_array] = lower_bound_array
-    data_dictionary[:upper_bound_array] = upper_bound_array
+    # capture the time step -
+    data_dictionary[:time_step_size] = time_step
 
     # return the dd w/default values -
     return data_dictionary

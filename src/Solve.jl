@@ -1,19 +1,38 @@
 function calculate_discrete_steady_state(ic_array, data_dictionary)
 
-    # setup the optimization problem -
-    objective_function(x) = discrete_steady_state_balance_residual(x,data_dictionary)
+    # grab the step size -
+    time_step_size = data_dictionary[:time_step_size]
+    time_start = 0.0
+    time_stop = 100.0
 
-    # get the lower, and upper_bounds for the states -
-    lower_bound_array = data_dictionary[:lower_bound_array]
-    upper_bound_array = data_dictionary[:upper_bound_array]
+    # main loop -
+    is_ok_to_stop = false
+    steady_state_vector = zeros(1)
+    while (is_ok_to_stop == false)
 
-    # make a call to the optim package -
-    result = optimize(objective_function,lower_bound_array, upper_bound_array, ic_array,Fminbox(LBFGS()))
+        # run the model for a bit -
+        soln_array_1 = GRNDiscreteDynamicSolve((time_start, time_stop, time_step_size), data_dictionary)
 
-    # get the extent -
-    steady_state_vector = Optim.minimizer(result)
+        # run for one more step -
+        data_dictionary[:initial_condition_array] = soln_array_1[end,:]
+        soln_array_2 = GRNDiscreteDynamicSolve((time_stop, time_stop+1.0, time_step_size), data_dictionary)
 
-    # return -
+        # compute the differnce -
+        residual = soln_array_1[end,:] - soln_array_2[end,:]
+
+        # error -
+        error = transpose(residual)*residual
+
+        # check error -
+        if error < 0.001
+            is_ok_to_stop = true
+            steady_state_vector = soln_array_2[end,:]
+        else
+            time_start = time_stop + 1.0
+            time_stop = time_start + 100.0
+        end
+    end
+
     return steady_state_vector
 end
 
