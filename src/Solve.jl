@@ -11,11 +11,11 @@ function calculate_discrete_steady_state(ic_array, data_dictionary)
     while (is_ok_to_stop == false)
 
         # run the model for a bit -
-        soln_array_1 = GRNDiscreteDynamicSolve((time_start, time_stop, time_step_size), data_dictionary)
+        (T1,soln_array_1) = GRNDiscreteDynamicSolve((time_start, time_stop, time_step_size), data_dictionary)
 
         # run for one more step -
         data_dictionary[:initial_condition_array] = soln_array_1[end,:]
-        soln_array_2 = GRNDiscreteDynamicSolve((time_stop, time_stop+1.0, time_step_size), data_dictionary)
+        (T2,soln_array_2) = GRNDiscreteDynamicSolve((T1[end], T1[end]+1.0, time_step_size), data_dictionary)
 
         # compute the differnce -
         residual = soln_array_1[end,:] - soln_array_2[end,:]
@@ -28,8 +28,8 @@ function calculate_discrete_steady_state(ic_array, data_dictionary)
             is_ok_to_stop = true
             steady_state_vector = soln_array_2[end,:]
         else
-            time_start = time_stop + 1.0
-            time_stop = time_start + 100.0
+            time_start = T2[end]
+            time_stop = T2[end] + 100.0
         end
     end
 
