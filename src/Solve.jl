@@ -127,7 +127,7 @@ function GRNDynamicSolve(time_span::Tuple{Float64,Float64}, data_dictionary::Dic
     problem_object = ODEProblem(balances, initial_condition_array, time_span, data_dictionary)
 
     # solve -
-    solution = solve(problem_object)
+    solution = solve(problem_object, AutoTsit5(Rosenbrock23()), reltol=1e-8,abstol=1e-8)
 
     # pull solution apart -
     T = solution.t
