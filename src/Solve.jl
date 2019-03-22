@@ -8,7 +8,7 @@ function calculate_discrete_steady_state(ic_array, data_dictionary)
     # main loop -
     is_ok_to_stop = false
     steady_state_vector = zeros(1)
-    max_number_of_iterations = 100
+    max_number_of_iterations = 10
     counter = 1
     while (is_ok_to_stop == false)
 
@@ -62,6 +62,43 @@ function GRNSteadyStateSolve(data_dictionary::Dict{Symbol,Any})
         # Oooops - throw an error, no problem type flag
         throw(UndefVarError(:problem_type_flag))
     end
+end
+
+function GRNDifferentialAlgebraicSolve(time_span::Tuple{Float64,Float64}, data_dictionary::Dict{Symbol,Any})
+
+    # setup the problem -
+    
+    # grab the initial_condition_array from the data_dictionary -
+    initial_condition_array_state = data_dictionary[:initial_condition_array_state]
+    initial_condition_array_derivative = data_dictionary[:initial_condition_array_derivative]
+
+    # grab the diff_vars_array -
+    diff_vars_array = data_dictionary[:diff_vars_array]
+
+    # formulate the problen object -
+    problem_object = DAEProblem(differential_algebraic_balances, initial_condition_array_derivative, initial_condition_array_state,time_span, differential_vars=diff_vars_array)
+
+    # solve the problem -
+    solution = solve(problem_object,IDA())
+
+    # pull solution apart -
+    T = solution.t
+
+    # initialize the state array -
+    number_of_times_steps = length(T)
+    number_of_states = length(initial_condition_array)
+    X = zeros(number_of_times_steps,number_of_states)
+    for step_index=1:number_of_times_steps
+
+        # grab the solution 0
+        soln_array = solution.u[step_index]
+        for state_index = 1:number_of_states
+            X[step_index, state_index] = soln_array[state_index]
+        end
+    end
+
+    # return -
+    return (T,X)
 end
 
 function GRNDiscreteDynamicSolve(time_span::Tuple{Float64, Float64, Float64}, data_dictionary::Dict{Symbol,Any})

@@ -3,6 +3,7 @@ using DifferentialEquations
 using LinearAlgebra
 using JSON
 using Optim
+using Sundials
 
 # My local files -
 include("Constants.jl")

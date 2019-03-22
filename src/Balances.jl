@@ -146,6 +146,9 @@ function discrete_dynamic_balances(t,x,data_dictionary)
     return next_step
 end
 
+function differential_algebraic_balances(out,dx,x,data_dictionary,t)
+end
+
 function balances(dx,x,data_dictionary,t)
 
     # get the structure arrays from the data_dictionary -

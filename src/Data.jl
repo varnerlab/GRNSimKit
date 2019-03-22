@@ -51,10 +51,10 @@ function compute_transcription_kinetic_array(biophysical_dictionary::Dict{Symbol
         tau_factor = (kE/kI)
 
         # compute the gene concentration -
-        G = gene_copy_number*(1/mass_of_single_cell)*(1/av_number)*(1e9)*(1/fraction_dry_cell)                      # nmol/gDW
+        G = gene_copy_number*(1/mass_of_single_cell)*(1/av_number)*(1e9)*(1/fraction_dry_cell)   # nmol/gDW
 
         # Compute the rate -
-        value = kE*RNAPII_concentration*(G/(KX*tau_factor+(1+tau_factor)*G))
+        value = kE*RNAPII_concentration*(G/(KX*tau_factor+(1+tau_factor)*G))*(3600)
 
         # push -
         push!(transcription_kinetics_array, value)
@@ -70,7 +70,7 @@ function compute_translation_parameter_array(biophysical_dictionary::Dict{Symbol
     mass_of_single_cell = biophysical_dictionary[:mass_of_single_cell]
     fraction_of_water_per_cell = biophysical_dictionary[:fraction_of_water_per_cell]
     ribosome_copy_number = biophysical_dictionary[:copies_of_ribosome_per_cell]
-    translation_elongation_rate = biophysical_dictionary[:transcription_elongation_rate]
+    translation_elongation_rate = biophysical_dictionary[:translation_elongation_rate]
     characteristic_initiation_time_translation = biophysical_dictionary[:characteristic_initiation_time_translation]
     KL = biophysical_dictionary[:translation_saturation_constant]
 
@@ -107,7 +107,7 @@ function compute_translation_parameter_array(biophysical_dictionary::Dict{Symbol
 
         # build -
         translationParameters = TranslationParameters()
-        translationParameters.vmax = translation_vmax
+        translationParameters.vmax = translation_vmax*(3600)    # convert to hr
         translationParameters.tau_factor = tau_factor
         translationParameters.KL = KL
         push!(translation_parameters_array, translationParameters)
@@ -349,6 +349,47 @@ function compute_symbol_index_map(model_dictionary)
 
     # return -
     return species_index_map
+end
+
+function build_differential_algebraic_data_dictionary(path_to_model_file::String)
+
+    # initailzie -
+    data_dictionary = Dict{Symbol,Any}()
+
+    # Load the model dictionary -
+    model_dictionary = JSON.parsefile(path_to_model_file)
+
+    # build the build_biophysical_dictionary -
+    biophysical_dictionary = build_biophysical_dictionary(model_dictionary)
+
+    # compute the transcription rates for all the genes -
+    transcription_kinetics_array = compute_transcription_kinetic_array(biophysical_dictionary, model_dictionary)
+
+    # precompute some translation parameters -
+    translation_parameters_array = compute_translation_parameter_array(biophysical_dictionary, model_dictionary)
+
+    # precompute a mapping between the species symbols, and index in the x-vector
+    species_symbol_index_map = compute_symbol_index_map(model_dictionary)
+
+    # build the dilution matrix -
+    AM = build_dilution_matrix(model_dictionary)
+
+    # Build the stoichiometric_matrix -
+    SM = build_stoichiometic_matrix(model_dictionary)
+
+    # --- populate the DD ------------------------------------------------ #
+    data_dictionary[:problem_type_flag] = :differential_algebraic_dynamic
+    data_dictionary[:transcription_kinetics_array] = transcription_kinetics_array
+    data_dictionary[:translation_parameters_array] = translation_parameters_array
+    data_dictionary[:dilution_matrix] = AM
+    data_dictionary[:stoichiometric_matrix] = SM
+
+    data_dictionary[:species_symbol_index_map] = species_symbol_index_map
+    data_dictionary[:model_dictionary] = model_dictionary
+
+    # return the dd w/default values -
+    return data_dictionary
+    # ------------------------------------------------------------------- #
 end
 
 function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_model_file::String)
