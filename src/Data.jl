@@ -139,6 +139,9 @@ function build_biophysical_dictionary(model_dictionary::Dict{String,Any})
     return biophysical_dictionary
 end
 
+function build_parameter_index_map(model_dictionary::Dict{String,Any})
+end
+
 function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
 
     # get node and species lists -
@@ -392,16 +395,7 @@ function build_differential_algebraic_data_dictionary(path_to_model_file::String
     # ------------------------------------------------------------------- #
 end
 
-function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_model_file::String)
-
-    # TODO: Do we have a legit path to the model file?
-    # ....
-
-    # initailzie -
-    data_dictionary = Dict{Symbol,Any}()
-
-    # Load the model dictionary -
-    model_dictionary = JSON.parsefile(path_to_model_file)
+function build_discrete_dynamic_data_dictionary(time_step::Float64, model_dictionary::Dict{String,Any})
 
     # build the build_biophysical_dictionary -
     biophysical_dictionary = build_biophysical_dictionary(model_dictionary)
@@ -441,6 +435,7 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_mode
     upper_bound_array = Inf*ones(number_of_states)
 
     # --- populate the DD -------------------------------------- #
+    data_dictionary = Dict{Symbol,Any}()
     data_dictionary[:problem_type_flag] = :discrete_dynamic
     data_dictionary[:initial_condition_array] = initial_condition_array
     data_dictionary[:number_of_states] = number_of_states
@@ -458,6 +453,18 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, path_to_mode
     # return the dd w/default values -
     return data_dictionary
     # ---------------------------------------------------------- #
+end
+
+function build_discrete_dynamic_data_dictionary_from_model_file(time_step::Float64, path_to_model_file::String)
+
+    # TODO: Do we have a legit path to the model file?
+    # ....
+
+    # Load the model dictionary -
+    model_dictionary = JSON.parsefile(path_to_model_file)
+
+    # buld the data dictionary and return -
+    return build_discrete_dynamic_data_dictionary(time_step, model_dictionary)
 end
 
 function build_default_data_dictionary(path_to_model_file::String)
