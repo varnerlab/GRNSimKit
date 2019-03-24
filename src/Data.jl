@@ -139,6 +139,33 @@ function build_biophysical_dictionary(model_dictionary::Dict{String,Any})
     return biophysical_dictionary
 end
 
+function correct_discrete_dilution_matrix(AHAT,model_dictionary::Dict{String,Any})
+
+    # get node and species lists -
+    list_of_species_dictionaries = model_dictionary["list_of_species_symbols"]
+
+    # how many species do we have?
+    total_number_of_species = length(list_of_species_dictionaries)
+
+    # build a blank st array -
+    dilution_matrix = -1*Matrix{Float64}(I, total_number_of_species, total_number_of_species)
+
+    # correct -
+    for species_dictionary in list_of_species_dictionaries
+
+        # get the index, and the type -
+        species_index = parse(Int64, species_dictionary["index"])
+        species_type_symbol = Symbol(species_dictionary["type"])
+
+        # if symbol is of type constant, then the dilution element is 0
+        if species_type_symbol == :constant
+            AHAT[species_index,species_index] = 1.0
+        end
+    end
+
+    return AHAT
+end
+
 function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
 
     # get node and species lists -
@@ -159,7 +186,7 @@ function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
 
         # if symbol is of type constant, then the dilution element is 0
         if species_type_symbol == :constant
-            dilution_matrix[species_index,species_index] = 0.0
+            dilution_matrix[species_index,species_index] = 1.0
         end
     end
 
@@ -412,7 +439,8 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, model_dictio
     # for steady-state calculations -
     CHAT = inv((IM - AHAT))
 
-    # need to correct
+    # need to correct the AHAT -
+    AHAT = correct_discrete_dilution_matrix(AHAT, model_dictionary)
 
     # setup the system size -
     number_of_states = compute_total_number_of_states(model_dictionary)
