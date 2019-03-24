@@ -139,9 +139,6 @@ function build_biophysical_dictionary(model_dictionary::Dict{String,Any})
     return biophysical_dictionary
 end
 
-function build_parameter_index_map(model_dictionary::Dict{String,Any})
-end
-
 function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
 
     # get node and species lists -
@@ -162,7 +159,7 @@ function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
 
         # if symbol is of type constant, then the dilution element is 0
         if species_type_symbol == :constant
-            dilution_matrix[species_index,species_index] = 1.0
+            dilution_matrix[species_index,species_index] = 0.0
         end
     end
 
@@ -414,6 +411,8 @@ function build_discrete_dynamic_data_dictionary(time_step::Float64, model_dictio
 
     # for steady-state calculations -
     CHAT = inv((IM - AHAT))
+
+    # need to correct
 
     # setup the system size -
     number_of_states = compute_total_number_of_states(model_dictionary)
