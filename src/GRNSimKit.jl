@@ -15,5 +15,7 @@ export build_discrete_dynamic_data_dictionary_from_model_file
 export build_differential_algebraic_data_dictionary
 
 export write_discrete_perturbed_simulation_files
+export write_scaled_sensitivity_array
+export time_average_senstivity_array
 
 end # module

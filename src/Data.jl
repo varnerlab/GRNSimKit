@@ -35,7 +35,12 @@ function compute_transcription_kinetic_array(biophysical_dictionary::Dict{Symbol
 
     # compute the kinetic limit -
     list_of_gene_nodes = model_dictionary["list_of_nodes"]
-    for node_dictionary in list_of_gene_nodes
+    number_of_nodes = length(list_of_gene_nodes)
+    for node_index = 1:number_of_nodes
+
+        # get the dictionary for this node -
+        node_key = "N$(node_index)"
+        node_dictionary = list_of_gene_nodes[node_key]
 
         # compute elongation constant -
         gene_length = parse(Float64,node_dictionary["parameters"]["gene_length_in_nt"])
@@ -88,7 +93,12 @@ function compute_translation_parameter_array(biophysical_dictionary::Dict{Symbol
 
     # compute the translation parameters -
     list_of_gene_nodes = model_dictionary["list_of_nodes"]
-    for node_dictionary in list_of_gene_nodes
+    number_of_nodes = length(list_of_gene_nodes)
+    for node_index = 1:number_of_nodes
+
+        # get the dictionary for this node -
+        node_key = "N$(node_index)"
+        node_dictionary = list_of_gene_nodes[node_key]
 
         # compute elongation constant -
         protein_length = parse(Float64,node_dictionary["parameters"]["protein_length_in_aa"])
@@ -202,7 +212,12 @@ function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
 
     # ok, next let's compute the degrdation for each mRNA and protein node -
     list_of_gene_nodes = model_dictionary["list_of_nodes"]
-    for node_dictionary in list_of_gene_nodes
+    number_of_nodes = length(list_of_gene_nodes)
+    for node_index = 1:number_of_nodes
+
+        # get the dictionary for this node -
+        node_key = "N$(node_index)"
+        node_dictionary = list_of_gene_nodes[node_key]
 
         # grab the parameters for this node -
         mRNA_half_life_in_hr = parse(Float64, node_dictionary["parameters"]["mRNA_half_life_in_hr"])
@@ -217,7 +232,11 @@ function build_discrete_dilution_matrix(model_dictionary::Dict{String,Any})
         push!(dilution_term_array, term)
     end
 
-    for node_dictionary in list_of_gene_nodes
+    for node_index = 1:number_of_nodes
+
+        # get the dictionary for this node -
+        node_key = "N$(node_index)"
+        node_dictionary = list_of_gene_nodes[node_key]
 
         # grab the parameters for this node -
         protein_half_life_in_hr = parse(Float64, node_dictionary["parameters"]["protein_half_life_in_hr"])
@@ -284,7 +303,12 @@ function build_dilution_matrix(model_dictionary::Dict{String,Any})
 
     # ok, next let's compute the degrdation for each mRNA and protein node -
     list_of_gene_nodes = model_dictionary["list_of_nodes"]
-    for node_dictionary in list_of_gene_nodes
+    number_of_nodes = length(list_of_gene_nodes)
+    for node_index = 1:number_of_nodes
+
+        # get the dictionary for this node -
+        node_key = "N$(node_index)"
+        node_dictionary = list_of_gene_nodes[node_key]
 
         # grab the parameters for this node -
         mRNA_half_life_in_hr = parse(Float64, node_dictionary["parameters"]["mRNA_half_life_in_hr"])
@@ -299,7 +323,11 @@ function build_dilution_matrix(model_dictionary::Dict{String,Any})
         push!(dilution_term_array, term)
     end
 
-    for node_dictionary in list_of_gene_nodes
+    for node_index = 1:number_of_nodes
+
+        # get the dictionary for this node -
+        node_key = "N$(node_index)"
+        node_dictionary = list_of_gene_nodes[node_key]
 
         # grab the parameters for this node -
         protein_half_life_in_hr = parse(Float64, node_dictionary["parameters"]["protein_half_life_in_hr"])

@@ -131,7 +131,7 @@ function write_discrete_perturbed_simulation_files(time_span::Tuple{Float64, Flo
         # ok, evaulate the down case -
         down_dictionary = build_discrete_dynamic_data_dictionary(time_step_size, perturbed_down_model_dictionary)
         down_dictionary[:initial_condition_array] = initial_condition_array
-        (TD, XD) = GRNDiscreteDynamicSolve(time_span, up_dictionary)
+        (TD, XD) = GRNDiscreteDynamicSolve(time_span, down_dictionary)
         file_name = "simulation_down_P$(counter).dat"
         output_file_path = joinpath(output_dir,file_name)
         writedlm(output_file_path, [TD XD])
@@ -139,4 +139,154 @@ function write_discrete_perturbed_simulation_files(time_span::Tuple{Float64, Flo
         # update the counter -
         counter = counter + 1
     end
+end
+
+function write_scaled_sensitivity_array(time_index_array, state_index_array, parameter_path_array, simulation_data_path, sensitivity_output_dir, model_dictionary::Dict{String,Any})
+
+    # get node and species lists -
+    list_of_species_dictionaries = model_dictionary["list_of_species_symbols"]
+
+    # ok, setup some dimensions -
+    number_of_parameters = length(parameter_path_array)
+    number_of_states = length(state_index_array)
+    number_of_time_steps = length(time_index_array)
+
+    # initialize ensemble -
+    sensitivity_ensemble = Array{Array{Float64,2},1}()
+
+    # main loop -
+    for time_step_index = 1:number_of_time_steps
+
+        # initialize sensitivity array for this time point -
+        sensitivity_array = zeros(number_of_states,number_of_parameters)
+
+        # get the time_index (row in the state array)
+        simulation_time_index = time_index_array[time_step_index]
+
+        # process each parameter -
+        for parameter_index = 1:number_of_parameters
+
+            # get parameter path -
+            parameter_path = reverse(splitpath(parameter_path_array[parameter_index]))
+
+            # what is the nominal value of this parameter?
+            nominal_parameter_value = parse(Float64, get_parameter_value(parameter_path, model_dictionary))
+
+            # load the data for this parameter -
+            # nominal -
+            nominal_file_path = joinpath(simulation_data_path,"simulation_nominal.dat")
+            nominal_data_array = readdlm(nominal_file_path)
+
+            # up file -
+            up_file_path = joinpath(simulation_data_path, "simulation_up_P$(parameter_index).dat")
+            up_data_array = readdlm(up_file_path)
+
+            # down file -
+            down_file_path = joinpath(simulation_data_path, "simulation_down_P$(parameter_index).dat")
+            down_data_array = readdlm(down_file_path)
+
+            for state_index = 1:number_of_states
+
+                # get the state index -
+                simulation_state_index = state_index_array[state_index]
+
+                # what is the nominal state?
+                nominal_state_value = nominal_data_array[simulation_time_index, (simulation_state_index+1)]
+
+                # at this time point, calculate the difference in state -
+                delta_state = up_data_array[simulation_time_index, (simulation_state_index+1)] - down_data_array[simulation_time_index, (simulation_state_index+1)]
+                delta_parameter = 2*(0.05)*nominal_parameter_value
+
+                # compute the sensitivity coeffient -
+                scale_factor = (nominal_parameter_value/nominal_state_value)
+                sensitivity_coefficient = scale_factor*(delta_state/delta_parameter)
+
+                println("delta_state = $(delta_state)")
+
+                # package in the array -
+                sensitivity_array[state_index,parameter_index] = sensitivity_coefficient
+            end
+        end
+
+        # push -
+        push!(sensitivity_ensemble,sensitivity_array)
+
+        # dump -
+        sensitivity_output_file_path = joinpath(sensitivity_output_dir, "sensitivity_T$(time_step_index).dat")
+        writedlm(sensitivity_output_file_path, sensitivity_array)
+    end
+end
+
+function time_average_senstivity_array(time_index_array, simulation_data_path, sensitivity_output_dir)
+
+    # load the nominal data  -
+    nominal_file_path = joinpath(simulation_data_path,"simulation_nominal.dat")
+    nominal_data_array = readdlm(nominal_file_path)
+
+    # load sensitivity file -
+    sensitivity_array_path = joinpath(sensitivity_output_dir, "sensitivity_T1.dat")
+    sensitivity_array = readdlm(sensitivity_array_path)
+    (number_of_states, number_of_parameters) = size(sensitivity_array)
+
+    # how many time steps are we going to simulate over?
+    number_of_time_steps = length(time_index_array)
+
+    # get the time array -
+    simulation_time_array = nominal_data_array[:,1]
+
+    # initialize -
+    time_integrated_sensitivity_array = zeros(number_of_states, number_of_parameters)
+
+    # loop -
+    for parameter_index = 1:number_of_parameters
+        for state_index = 1:number_of_states
+
+            # initialize -
+            local_state_array = Float64[]
+            local_time_array = Float64[]
+            for time_index = 1:number_of_time_steps
+
+                # load -
+                sensitivity_array_path = joinpath(sensitivity_output_dir, "sensitivity_T$(time_index).dat")
+                sensitivity_array = readdlm(sensitivity_array_path)
+
+                # grab -
+                push!(local_time_array, simulation_time_array[time_index])
+                push!(local_state_array, sensitivity_array[state_index, parameter_index])
+            end
+
+            # integrate -
+            delta_time = simulation_time_array[time_index_array[end]] - simulation_time_array[time_index_array[1]]
+            integrated_value = (1/delta_time)*trapz(local_time_array, abs.(local_state_array))
+
+            # cache -
+            time_integrated_sensitivity_array[state_index, parameter_index] = integrated_value
+        end
+    end
+
+    # return -
+    return time_integrated_sensitivity_array
+end
+
+function trapz(x::Array{Float64}, y::Array{Float64})
+
+    # Trapezoidal integration rule
+    local n = length(x)
+    if (length(y) != n)
+        error("Vectors 'x', 'y' must be of same length")
+    end
+
+    r = 0
+    if n == 1; return r; end
+    for i in 2:n
+        r += (x[i] - x[i-1]) * (y[i] + y[i-1])
+    end
+    #= correction -h^2/12 * (f'(b) - f'(a))
+    ha = x[2] - x[1]
+    he = x[end] - x[end-1]
+    ra = (y[2] - y[1]) / ha
+    re = (y[end] - y[end-1]) / he
+    r/2 - ha*he/12 * (re - ra)
+    =#
+    return r/2
 end

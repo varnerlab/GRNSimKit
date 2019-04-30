@@ -12,11 +12,16 @@ function calculate_control_array(t,x,data_dictionary)
 
     # grab the list of nodes -
     list_of_nodes = model_dictionary["list_of_nodes"]
-    for node in list_of_nodes
+    number_of_nodes = length(list_of_nodes)
+    for node_index = 1:number_of_nodes
 
         # initialize -
         numerator_term_array = Float64[]
         denominator_term_array = Float64[]
+
+        # get the dictionary for this node -
+        node_key = "N$(node_index)"
+        node = list_of_nodes[node_key]
 
         # --------------------------------------------------------------------------------- #
         # background -
@@ -25,7 +30,12 @@ function calculate_control_array(t,x,data_dictionary)
 
         # list of activators -
         list_of_activators = node["transcription_control_structure"]["list_of_activators"]
-        for activator_node in list_of_activators
+        number_of_activator_nodes = length(list_of_activators)
+        for node_index = 1:number_of_activator_nodes
+
+            # get the node -
+            node_key = "$(node_index)"
+            activator_node = list_of_activators[node_key]
 
             # grab the symbol and stuff -
             species_symbol = activator_node["symbol"]
@@ -44,8 +54,13 @@ function calculate_control_array(t,x,data_dictionary)
 
         # list of repressors -
         list_of_repressors = node["transcription_control_structure"]["list_of_repressors"]
+        number_of_repessor_nodes = length(list_of_repressors)
         push!(denominator_term_array, 1.0)
-        for repressor_node in list_of_repressors
+        for node_index = 1:number_of_repessor_nodes
+
+            # get the node -
+            node_key = "$(node_index)"
+            repressor_node = list_of_repressors[node_key]
 
             # grab the symbol and stuff -
             species_symbol = repressor_node["symbol"]
