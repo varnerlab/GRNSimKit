@@ -93,10 +93,74 @@ function build_biophysical_dictionary(model_dictionary::Dict{String,Any})
     return biophysical_dictionary
 end
 
+function build_toml_biophysical_dictionary(model_dictionary::Dict{String,Any})
+
+    # initialize -
+    biophysical_dictionary = Dict{Symbol,Any}()
+
+    # convert -
+    list_of_constant_dictionaries = model_dictionary["biophysical_constants"]
+    for (key, value) in list_of_constant_dictionaries
+
+        # create a symbol from the key -
+        key_symbol = Symbol(key)
+
+        # cache -
+        biophysical_dictionary[key_symbol] = value
+    end
+
+    # return -
+    return biophysical_dictionary
+end
+
 function build_toml_discrete_dynamic_data_dictionary(time_step::Float64, model_dictionary::Dict{String,Any})
 end
 
 function build_toml_dynamic_data_dictionary(time_step::Float64, model_dictionary::Dict{String,Any})
+
+    # initailzie -
+    data_dictionary = Dict{Symbol,Any}()
+
+    # build the build_biophysical_dictionary -
+    biophysical_dictionary = build_toml_biophysical_dictionary(model_dictionary)
+
+    # build the dilution matrix -
+    AM = build_toml_dilution_matrix(model_dictionary)
+
+    # Build the stoichiometric_matrix -
+    SM = build_stoichiometic_matrix(model_dictionary)
+
+    # setup the system size -
+    number_of_states = compute_total_number_of_states(model_dictionary)
+
+    # setup initial conditions -
+    initial_condition_array = zeros(number_of_states)
+
+    # setup initial conditions -
+    initial_condition_array = zeros(number_of_states)
+
+    # compute the transcription rates for all the genes -
+    transcription_kinetics_array = compute_transcription_kinetic_array(biophysical_dictionary, model_dictionary)
+
+    # precompute some translation parameters -
+    translation_parameters_array = compute_translation_parameter_array(biophysical_dictionary, model_dictionary)
+
+    # precompute a mapping between the species symbols, and index in the x-vector
+    species_symbol_index_map = compute_symbol_index_map(model_dictionary)
+
+    # --- populate the DD -------------------------------------- #
+    data_dictionary[:problem_type_flag] = :general_dynamic
+    data_dictionary[:initial_condition_array] = initial_condition_array
+    data_dictionary[:number_of_states] = number_of_states
+    data_dictionary[:dilution_matrix] = AM
+    data_dictionary[:stoichiometric_matrix] = SM
+    data_dictionary[:transcription_kinetics_array] = transcription_kinetics_array
+    data_dictionary[:translation_parameters_array] = translation_parameters_array
+    data_dictionary[:species_symbol_index_map] = species_symbol_index_map
+    data_dictionary[:model_dictionary] = model_dictionary
+
+    # return the dd w/default values -
+    return data_dictionary
 end
 
 function build_json_discrete_dynamic_data_dictionary(time_step::Float64, model_dictionary::Dict{String,Any})
